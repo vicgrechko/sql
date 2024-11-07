@@ -1,0 +1,93 @@
+Подсчитайте общее количество заказов и среднюю сумму заказа по каждому году. Включите только те годы, где средняя сумма заказа превышает 2000. Добавьте категорию: "High ---  Demand" для лет с более чем 500 заказами, "Medium Demand" для лет с 300-500 заказами и "Low Demand" для остальных. Укажите дату, количество заказов, среднюю сумму заказа и категорию.
+Используйте таблицу Sales.SalesOrderHeader
+
+Select 
+year(OrderDate),
+avg (SubTotal) AS AverageSumOrders ,
+count(SalesOrderID) as QuantityOrders, 
+
+CASE 
+	WHEN count(SalesOrderID) > 500 THEN 'High Demand'
+	WHEN count(SalesOrderID) BETWEEN 300 and 500 THEN 'medium demand'
+	ELSE 'Low Demand'
+END AS CategoryOrder
+from Sales.SalesOrderHeader
+group by year (OrderDate)
+having avg(SubTotal) > 2000
+
+
+Найдите общую сумму продаж и средний процент скидки по каждой категории продукта. Выберите только категории, где общая сумма продаж превышает 50,000. Добавьте категорию: "Top Category" для категорий с суммой продаж более 200,000, "Mid Category" для категорий с суммой от 100,000 до 200,000 и "Low Category" для всех остальных. Укажите категорию, общую сумму продаж, средний процент скидки и категорию уровня продаж.
+Используйте таблицы Sales.SalesOrderDetail, Production.Product, Production.ProductSubcategory, и Production.ProductCategory.
+
+Select 
+ppc.ProductCategoryID AS ProductCategory, 
+SUM (ssod.LineTotal) AS TotalSales , 
+AVG (ssod.UnitPriceDiscount) AS AverageDiscount,
+
+CASE 
+WHEN sum (ssod.LineTotal) > 200000 THEN 'top category'
+WHEN sum (ssod.LineTotal) BETWEEN 100000 AND 200000 THEN 'mid category' 
+else 'low category'
+END AS CategoryperSales
+
+from Production.Product  pp
+JOIN Production.ProductSubcategory  pps ON pp.ProductSubcategoryID = pps.ProductSubcategoryID 
+JOIN Production.ProductCategory  ppc ON pps.ProductCategoryID = ppc.ProductCategoryID
+JOIN Sales.SalesOrderDetail ssod ON ssod.ProductID = pp.ProductID
+
+group by ppc.ProductCategoryID
+HAVING sum (ssod.LineTotal) > 50000
+
+
+
+
+
+
+Подсчитайте среднюю стоимость заказа и общее количество заказов по каждому региону (StateProvince). Включите только регионы, где средняя стоимость заказа превышает 1500. Добавьте категорию: "Expensive" для регионов со средней стоимостью заказа выше 3000, "Moderate" для стоимости от 2000 до 3000 и "Affordable" для остальных. Укажите регион, среднюю стоимость заказа, количество заказов и категорию.
+Используйте таблицы Sales.SalesOrderHeader, Person.Address, и Person.StateProvince.
+
+
+
+select 
+avg(ssoh.SubTotal) as AverageCost , 
+count(ssoh.SalesOrderID) as Quantity, 
+psp.Name as StateProvince,
+CASE
+WHEN AVG(ssoh.SubTotal) > 3000 THEN 'Expensive'
+WHEN AVG(ssoh.SubTotal)  BETWEEN 2000 AND 3000 THEN 'Moderate'
+ELSE 'Affordable'
+END AS CategoryRegion
+
+FROM Sales.SalesOrderHeader ssoh
+JOIN Person.Address pa ON pa.StateProvinceID = ssoh.TerritoryID
+JOIN Person.StateProvince psp ON psp.StateProvinceID = ssoh.TerritoryID
+
+group by psp.Name
+having avg (ssoh.SubTotal) > 1500
+
+
+
+
+
+Найдите средний процент скидки и количество заказов для каждого дня недели. Включите только те дни, где количество заказов превышает 100. Добавьте категорию: "Peak Day" для дней с более чем 300 заказами, "High Traffic" для 200-300 заказов и "Regular" для остальных. Укажите день недели, средний процент скидки, количество заказов и категорию.
+Используйте таблицы Sales.SalesOrderHeader и Sales.SalesOrderDetail.
+
+
+select 
+DATEPART(weekday, ssoh.OrderDate) AS DayofTheWeek,
+avg (ssod.UnitPriceDiscount) as AverageDiscount, 
+count(ssod.SalesOrderID) as QuantityOrders,
+
+CASE
+WHEN count(ssod.SalesOrderID) > 300 then 'Peak day'
+WHEN count(ssod.SalesOrderID) between 200 and 300 then 'High Traffic'
+ELSE 'Regular'
+END AS CategoryPurchase
+ 
+from Sales.SalesOrderHeader  ssoh
+JOIN Sales.SalesOrderDetail ssod ON ssod.SalesOrderID = ssoh.SalesOrderID
+Group by DATEPART(weekday, ssoh.OrderDate)
+Having count (ssod.SalesOrderID) > 100
+
+
+
